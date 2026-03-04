@@ -70,7 +70,7 @@ fn preset_resolves_inheritance() {
 
 #[test]
 fn preset_ids_list_is_complete() {
-    assert_eq!(preset_ids().len(), 28);
+    assert_eq!(preset_ids().len(), 31);
 }
 
 const MINIMAL_TOML: &str = r##"
@@ -225,7 +225,7 @@ fn file_preset_missing_parent_returns_error() {
 fn registry_lists_all_builtins() {
     let reg = Registry::new();
     let themes: Vec<_> = reg.list().collect();
-    assert_eq!(themes.len(), 28);
+    assert_eq!(themes.len(), 31);
     for info in themes {
         assert!(!info.id.is_empty());
         assert!(!info.name.is_empty());
@@ -258,7 +258,7 @@ fn registry_add_file_custom_theme() {
     let mut reg = Registry::new();
     reg.add_file(&path).unwrap();
 
-    assert_eq!(reg.list().count(), 29);
+    assert_eq!(reg.list().count(), 32);
 
     let last = reg.list().last().unwrap();
     assert_eq!(last.id.as_ref(), "test_theme");
@@ -331,7 +331,7 @@ fn registry_add_dir_loads_all_toml_files() {
     let mut reg = Registry::new();
     reg.add_dir(dir.path()).unwrap();
 
-    assert_eq!(reg.list().count(), 30);
+    assert_eq!(reg.list().count(), 33);
 }
 
 #[test]
@@ -355,8 +355,8 @@ foreground = "#112233"
     let mut reg = Registry::new();
     reg.add_file(&path).unwrap();
 
-    // Count should stay 28 (replaced, not appended)
-    assert_eq!(reg.list().count(), 28);
+    // Count should stay 31 (replaced, not appended)
+    assert_eq!(reg.list().count(), 31);
 
     let dracula = reg.list().find(|t| t.id.as_ref() == "dracula").unwrap();
     assert_eq!(dracula.name.as_ref(), "Custom Dracula");
@@ -387,7 +387,7 @@ fn registry_by_style_nonexistent_returns_empty() {
 fn registry_add_toml_registers_custom_theme() {
     let mut reg = Registry::new();
     reg.add_toml(MINIMAL_TOML.to_owned()).unwrap();
-    assert_eq!(reg.list().count(), 29);
+    assert_eq!(reg.list().count(), 32);
 
     let last = reg.list().last().unwrap();
     assert_eq!(last.id.as_ref(), "test_theme");

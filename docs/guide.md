@@ -1,18 +1,16 @@
 # Guide
 
-This guide covers loading presets, theme switching, custom presets, and end-user theming. For quick-start examples (single preset, all targets), see the [README](../README.md). For CSS variable names, see the [CSS variables reference](css-variables.md).
+Presets, rendering targets, theme switching, custom themes, and utilities. For a quick start, see the [README](../README.md). For CSS variable names, see the [CSS variables reference](css-variables.md).
 
-## Loading built-in presets
+## Loading presets
 
-Built-in presets are compiled into the binary. Use `preset()` to load them — it returns `Option<Palette>`, with `None` only if the ID doesn't match a builtin.
+Built-in presets are compiled into the binary. `preset()` returns `Option<Palette>` — `None` only if the ID doesn't match a builtin.
 
 ```rust
 use palette_core::preset;
 
 let palette = preset("tokyonight").expect("builtin preset");
 ```
-
-This is the right choice when you're loading a known builtin ID. No error handling beyond the `Option`.
 
 ### `preset()` vs `load_preset()`
 
@@ -26,17 +24,9 @@ Both resolve inheritance for variant presets (e.g. `tokyonight_storm` inherits f
 
 For user-provided TOML files, use `load_preset_file()` or a `Registry` — those paths can genuinely fail (missing file, bad TOML, broken inheritance chain).
 
-### WASM
-
-```js
-import { preset } from "palette-core";
-
-const palette = preset("tokyonight");  // returns palette or undefined
-```
-
 ### Fallback when loading fails
 
-`Palette` implements `Default` — a neutral dark palette with base, semantic, and surface colors. Use it as a safe fallback when theme loading fails:
+`Palette` implements `Default` — a neutral dark palette with base, semantic, and surface colors. Use it as a safe fallback:
 
 ```rust
 use palette_core::Palette;
@@ -57,9 +47,79 @@ let palette = preset(&user_choice)
 
 The default palette covers `base`, `semantic`, and `surface` slots. Syntax, editor, terminal, and diff slots are `None` — downstream renderers should apply their own defaults for those.
 
+## Rendering targets
+
+### CSS
+
+```rust
+use palette_core::preset;
+
+let palette = preset("tokyonight").expect("builtin preset");
+let css = palette.to_css();
+```
+
+For custom selectors or prefixed variables:
+
+```rust
+let scoped = palette.to_css_scoped("[data-theme=\"tokyonight\"]", None);
+let prefixed = palette.to_css_scoped(":root", Some("app")); // --app-bg, --app-fg, ...
+```
+
+See the [CSS variables reference](css-variables.md) for the full variable list.
+
+### Terminal (ratatui)
+
+Requires the `terminal` feature.
+
+```rust
+use palette_core::preset;
+use palette_core::terminal::to_terminal_theme;
+
+let palette = preset("catppuccin").expect("builtin preset");
+let theme = to_terminal_theme(&palette);
+// theme.base.background, theme.syntax.keywords, etc.
+```
+
+### egui
+
+Requires the `egui` feature.
+
+```rust
+use palette_core::preset;
+use palette_core::egui::to_egui_visuals;
+
+let palette = preset("github_dark").expect("builtin preset");
+ctx.set_visuals(to_egui_visuals(&palette));
+```
+
+### JSON
+
+Requires the `snapshot` feature.
+
+```rust
+use palette_core::preset;
+
+let palette = preset("nord").expect("builtin preset");
+let json = palette.to_json()?;
+```
+
+### WASM
+
+Requires the `wasm` feature.
+
+```js
+import { preset, loadPresetCss } from "palette-core";
+
+const palette = preset("tokyonight");   // returns palette or undefined
+console.log(palette.name());            // "TokyoNight (Night)"
+console.log(palette.toCss());           // :root { --bg: ...; --fg: ...; }
+
+const css = loadPresetCss("dracula");   // :root { ... }
+```
+
 ## Theme switching with Registry
 
-Use a `Registry` to expose all built-in presets. Load a default at startup. Let users pick from the list.
+`Registry` holds all loaded presets in one namespace. Load a default at startup. Let users pick from the list.
 
 ```rust
 use palette_core::Registry;
@@ -71,9 +131,8 @@ for info in reg.list() {
     println!("{} ({})", info.name, info.style);
 }
 
-// Load the user's choice (or fall back to a default)
-let user_choice = "catppuccin";
-let palette = reg.load(user_choice)?;
+// Load the user's choice
+let palette = reg.load("catppuccin")?;
 ```
 
 ### CSS — generate all themes for live switching
@@ -128,7 +187,7 @@ const palette = reg.load("dracula");
 
 ## Developer-defined custom presets
 
-Add your own presets — either full themes or variants that inherit from a built-in.
+Add your own presets — full themes or variants that inherit from a built-in.
 
 **Variant that inherits from a built-in:**
 
@@ -188,7 +247,7 @@ for info in reg.list() {
     println!("{}: {} ({})", info.id, info.name, info.style);
 }
 
-// Load like any other theme — inheritance resolves automatically
+// Inheritance resolves automatically
 let palette = reg.load("corporate_dark")?;
 ```
 
@@ -238,7 +297,7 @@ let palette = reg.load(&user_selected_theme_id)?;
 
 A user preset with the same `preset_id` as an existing theme replaces it, so users can override built-ins or developer themes.
 
-User presets support inheritance too — a user can write a variant that inherits from any theme already in the registry:
+User presets support inheritance — a user can write a variant that inherits from any theme already in the registry:
 
 ```toml
 # ~/.config/myapp/themes/my_nord.toml
@@ -261,3 +320,99 @@ const reg = new JsRegistry();
 reg.addToml(userTomlString);
 const palette = reg.load("my_nord");
 ```
+
+## Contrast validation
+
+Check foreground/background pairs against WCAG 2.1 contrast thresholds.
+
+```rust
+use palette_core::{preset, ContrastLevel};
+use palette_core::contrast::validate_palette;
+
+let palette = preset("tokyonight").expect("builtin preset");
+let violations = validate_palette(&palette, ContrastLevel::AaNormal);
+for v in &violations {
+    println!("{} on {}: {:.2}:1", v.foreground_label, v.background_label, v.ratio);
+}
+```
+
+Available levels: `AaNormal`, `AaLarge`, `AaaNormal`, `AaaLarge`.
+
+## Color manipulation
+
+```rust
+use palette_core::Color;
+
+let base = Color::from_hex("#1a1b26")?;
+
+let hover = base.lighten(0.1);
+let disabled = base.desaturate(0.3);
+let accent = base.rotate_hue(180.0);
+let overlay = base.blend(Color::from_hex("#FF0000")?, 0.5);
+let ratio = base.contrast_ratio(&Color::from_hex("#FFFFFF")?);
+```
+
+Methods: `lighten`, `darken`, `saturate`, `desaturate`, `rotate_hue`, `blend`, `contrast_ratio`, `meets_level`. Amounts are absolute (CSS color model). Non-finite inputs return the color unchanged.
+
+## Platform overrides
+
+Per-platform color overrides for themes that need different values on different targets. Requires the `platform` feature.
+
+```rust
+let manifest = palette_core::manifest::PaletteManifest::from_toml(toml_str)?;
+let overrides = palette_core::platform::from_sections(&manifest.platform)?;
+// overrides["terminal"].background, overrides["web"].foreground, etc.
+```
+
+## Preset format
+
+Base presets define all sections. Variants declare `inherits` in `[meta]` and override only differing values.
+
+```toml
+[meta]
+name = "My Theme Storm"
+preset_id = "my_theme_storm"
+schema_version = "1"
+style = "storm"
+kind = "preset-variant"
+inherits = "my_theme"
+
+[base]
+background = "#24283b"
+```
+
+Sections: `base`, `semantic`, `diff`, `surface`, `typography`, `syntax`, `editor`, `terminal`.
+
+## Feature flags
+
+| Feature | Dependency | What it adds |
+|---------|------------|--------------|
+| `terminal` | `ratatui` | `Palette` → `ratatui::style::Color` maps |
+| `egui` | `egui` | `Palette` → `egui::Visuals` |
+| `snapshot` | `serde_json` | JSON serialization of `Palette` |
+| `platform` | — | Parse `[platform.terminal]` / `[platform.web]` overrides |
+| `wasm` | `wasm-bindgen`, `js-sys` | JavaScript bindings (includes `snapshot`) |
+| `full` | all except `wasm` | `terminal` + `egui` + `snapshot` + `platform` |
+
+Core functionality — parsing, merge, CSS export, WCAG contrast, color manipulation — requires no optional dependencies.
+
+## Bundled presets
+
+| Family | Presets |
+|--------|--------|
+| Ayu | `ayu_dark`, `ayu_light`, `ayu_mirage` |
+| Catppuccin | `catppuccin`, `catppuccin_frappe`, `catppuccin_latte`, `catppuccin_macchiato` |
+| Dracula | `dracula` |
+| Golden Hour | `golden_hour`, `golden_hour_dusk`, `golden_hour_twilight` |
+| Everforest | `everforest_dark`, `everforest_light` |
+| GitHub | `github_dark`, `github_light` |
+| Gruvbox | `gruvbox_dark`, `gruvbox_light` |
+| Kanagawa | `kanagawa` |
+| Monokai | `monokai` |
+| Nord | `nord` |
+| One | `one_dark`, `one_light` |
+| Rosé Pine | `rose_pine`, `rose_pine_dawn`, `rose_pine_moon` |
+| Solarized | `solarized_dark`, `solarized_light` |
+| TokyoNight | `tokyonight`, `tokyonight_storm`, `tokyonight_day`, `tokyonight_moon` |
+
+All presets are embedded at compile time via `include_str!`. Use `preset_ids()` to list them programmatically.

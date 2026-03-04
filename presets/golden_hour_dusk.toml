@@ -1,0 +1,155 @@
+# Golden Hour (Dusk) — walnut in fading light
+
+[meta]
+name = "Golden Hour (Dusk)"
+preset_id = "golden_hour_dusk"
+schema_version = "1"
+style = "dark"
+kind = "preset-variant"
+inherits = "golden_hour"
+
+[base]
+background = "#1e1a14"
+background_dark = "#15120d"
+background_highlight = "#2d2720"
+foreground = "#d5c8b0"
+foreground_dark = "#a89878"
+border = "#2d2720"
+border_highlight = "#c8a550"
+
+[semantic]
+success = "#7aaa78"
+warning = "#c8a550"
+error = "#c87060"
+info = "#7a9ec0"
+hint = "#958570"
+
+[diff]
+added_bg = "#1e2a20"
+modified_bg = "#2a2518"
+removed_bg = "#2e1e1a"
+text_bg = "#2d2720"
+
+added = "#7aaa78"
+added_fg = "#7aaa78"
+modified = "#c8a550"
+modified_fg = "#c8a550"
+removed = "#c87060"
+removed_fg = "#c87060"
+ignored = "#5a4e38"
+
+[git]
+add = "#7aaa78"
+change = "#c8a550"
+delete = "#c87060"
+ignore = "#5a4e38"
+
+[surface]
+menu = "#15120d"
+sidebar = "#15120d"
+statusline = "#15120d"
+float = "#15120d"
+popup = "#15120d"
+overlay = "#15120d"
+highlight = "#2d2720"
+selection = "#3a3020"
+search = "#856a28"
+
+[typography]
+comment = "#958370"
+gutter = "#2d2720"
+line_number = "#958370"
+selection_text = "#d5c8b0"
+link = "#7a9ec0"
+title = "#dcc07a"
+
+[syntax]
+keywords = "#c87060"
+keywords_fn = "#c87060"
+functions = "#7a9ec0"
+variables = "#d5c8b0"
+variables_builtin = "#dcc07a"
+parameters = "#c8a550"
+
+properties = "#7aaa78"
+types = "#dcc07a"
+types_builtin = "#7a9ec0"
+constants = "#c87060"
+
+numbers = "#c8a550"
+booleans = "#c8a550"
+strings = "#7aaa78"
+strings_doc = "#958370"
+strings_escape = "#c87060"
+strings_regex = "#7a9ec0"
+
+operators = "#a89878"
+punctuation = "#a89878"
+punctuation_bracket = "#958370"
+
+annotations = "#7a9ec0"
+attributes = "#c8a550"
+constructor = "#dcc07a"
+tag = "#c87060"
+tag_delimiter = "#a89878"
+tag_attribute = "#7aaa78"
+comments = "#958370"
+
+[editor]
+cursor = "#d5c8b0"
+cursor_text = "#1e1a14"
+match_paren = "#c8a550"
+selection_bg = "#3a3020"
+selection_fg = "#d5c8b0"
+inlay_hint_bg = "#252018"
+inlay_hint_fg = "#988670"
+search_bg = "#c8a550"
+search_fg = "#1e1a14"
+
+diagnostic_error = "#c87060"
+diagnostic_warn = "#c8a550"
+diagnostic_info = "#7a9ec0"
+diagnostic_hint = "#7aaa78"
+diagnostic_underline_error = "#c87060"
+diagnostic_underline_warn = "#c8a550"
+diagnostic_underline_info = "#7a9ec0"
+diagnostic_underline_hint = "#7aaa78"
+
+[terminal]
+black = "#15120d"
+red = "#c87060"
+green = "#7aaa78"
+yellow = "#c8a550"
+blue = "#4a7090"
+magenta = "#9a7888"
+cyan = "#7a9ec0"
+white = "#d5c8b0"
+bright_black = "#5a4e38"
+bright_red = "#d8907e"
+bright_green = "#8aba88"
+bright_yellow = "#dcc07a"
+bright_blue = "#7a9ec0"
+bright_magenta = "#b098a8"
+bright_cyan = "#90b0d0"
+bright_white = "#e8dcc8"
+
+[platform.terminal]
+background = "#15120d"
+foreground = "#d5c8b0"
+
+[platform.web]
+background = "#1e1a14"
+foreground = "#d5c8b0"
+
+[palette]
+red = "#c87060"
+orange = "#d8907e"
+yellow = "#dcc07a"
+gold = "#c8a550"
+green = "#7aaa78"
+cyan = "#7a9ec0"
+blue = "#4a7090"
+blue0 = "#2a4a6b"
+blue1 = "#90b0d0"
+purple = "#9a7888"
+magenta = "#b098a8"

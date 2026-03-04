@@ -115,6 +115,62 @@ fn ratio_7_passes_all() {
 
 // --- Palette validation ---
 
+fn validate_preset_aa(preset_id: &str) -> Vec<palette_core::contrast::ContrastViolation> {
+    let palette = palette_core::registry::load_preset(preset_id).unwrap();
+    validate_palette(&palette, ContrastLevel::AaNormal)
+}
+
+#[test]
+fn golden_hour_passes_aa() {
+    let violations = validate_preset_aa("golden_hour");
+    assert!(
+        violations.is_empty(),
+        "golden_hour AA violations:\n{}",
+        violations
+            .iter()
+            .map(|v| format!(
+                "  {} on {}: {:.2}:1",
+                v.foreground_label, v.background_label, v.ratio
+            ))
+            .collect::<Vec<_>>()
+            .join("\n")
+    );
+}
+
+#[test]
+fn golden_hour_dusk_passes_aa() {
+    let violations = validate_preset_aa("golden_hour_dusk");
+    assert!(
+        violations.is_empty(),
+        "golden_hour_dusk AA violations:\n{}",
+        violations
+            .iter()
+            .map(|v| format!(
+                "  {} on {}: {:.2}:1",
+                v.foreground_label, v.background_label, v.ratio
+            ))
+            .collect::<Vec<_>>()
+            .join("\n")
+    );
+}
+
+#[test]
+fn golden_hour_twilight_passes_aa() {
+    let violations = validate_preset_aa("golden_hour_twilight");
+    assert!(
+        violations.is_empty(),
+        "golden_hour_twilight AA violations:\n{}",
+        violations
+            .iter()
+            .map(|v| format!(
+                "  {} on {}: {:.2}:1",
+                v.foreground_label, v.background_label, v.ratio
+            ))
+            .collect::<Vec<_>>()
+            .join("\n")
+    );
+}
+
 #[test]
 fn tokyonight_fg_bg_passes_aa() {
     let manifest = common::load_preset("tokyonight");
