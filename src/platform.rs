@@ -11,7 +11,9 @@ use crate::manifest::PlatformSections;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "snapshot", derive(serde::Serialize))]
 pub struct PlatformOverride {
+    /// Background color override for this platform.
     pub background: Option<Color>,
+    /// Foreground color override for this platform.
     pub foreground: Option<Color>,
 }
 

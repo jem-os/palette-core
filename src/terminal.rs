@@ -12,10 +12,14 @@ pub fn to_ratatui_color(color: &Color) -> RatatuiColor {
 
 macro_rules! terminal_group {
     ($(#[$_meta:meta])* $color_type:ident { $($field:ident),+ $(,)? }) => {
-        paste::paste! {
+        pastey::paste! {
+            #[doc = concat!("Ratatui-native version of [`", stringify!($color_type), "`](crate::palette::", stringify!($color_type), ").")]
             #[derive(Debug, Clone)]
             pub struct [<Terminal $color_type>] {
-                $(pub $field: Option<RatatuiColor>,)+
+                $(
+                    #[doc = concat!("`", stringify!($field), "` slot.")]
+                    pub $field: Option<RatatuiColor>,
+                )+
             }
 
             impl [<Terminal $color_type>] {
@@ -34,13 +38,21 @@ crate::palette::color_fields!(terminal_group);
 /// Complete ratatui-native theme mirroring every [`Palette`] color group.
 #[derive(Debug, Clone)]
 pub struct TerminalTheme {
+    /// Core background and foreground colors.
     pub base: TerminalBaseColors,
+    /// Status colors (success, warning, error, info, hint).
     pub semantic: TerminalSemanticColors,
+    /// Version-control diff highlighting.
     pub diff: TerminalDiffColors,
+    /// UI surface colors (menus, sidebars, overlays).
     pub surface: TerminalSurfaceColors,
+    /// Text chrome (comments, line numbers, links).
     pub typography: TerminalTypographyColors,
+    /// Syntax-highlighting token colors.
     pub syntax: TerminalSyntaxColors,
+    /// Editor chrome (cursor, selections, diagnostics).
     pub editor: TerminalEditorColors,
+    /// Standard 16-color ANSI terminal palette.
     pub terminal_ansi: TerminalTerminalAnsiColors,
 }
 

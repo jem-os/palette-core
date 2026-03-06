@@ -34,15 +34,24 @@
 //! | egui `Visuals` | `egui` | [`egui::to_egui_visuals`] |
 //! | WASM/JS bindings | `wasm` | `wasm` module |
 
+/// 8-bit RGB color type and hex parsing.
 pub mod color;
+/// Error types for theme loading and parsing.
 pub mod error;
+/// Raw TOML manifest types before color resolution.
 pub mod manifest;
+/// Single-level manifest inheritance (variant over base).
 pub mod merge;
+/// Resolved color palette and color-group structs.
 pub mod palette;
+/// Built-in preset registry and theme discovery.
 pub mod registry;
 
+/// WCAG 2.1 contrast ratio checking and palette validation.
 pub mod contrast;
+/// CSS custom-property export.
 pub mod css;
+/// HSL color manipulation: lighten, darken, saturate, blend.
 pub mod manipulation;
 
 pub use color::Color;

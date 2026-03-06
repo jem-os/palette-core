@@ -17,8 +17,11 @@ pub struct InvalidHex {
 #[cfg_attr(feature = "snapshot", derive(serde::Serialize))]
 #[cfg_attr(feature = "snapshot", serde(into = "String"))]
 pub struct Color {
+    /// Red channel.
     pub r: u8,
+    /// Green channel.
     pub g: u8,
+    /// Blue channel.
     pub b: u8,
 }
 

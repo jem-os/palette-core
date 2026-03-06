@@ -27,7 +27,10 @@ macro_rules! color_group {
         #[derive(Debug, Clone, Default, PartialEq, Eq)]
         #[cfg_attr(feature = "snapshot", derive(serde::Serialize))]
         pub struct $name {
-            $(pub $field: Option<Color>,)+
+            $(
+                #[doc = concat!("`", stringify!($field), "` slot.")]
+                pub $field: Option<Color>,
+            )+
         }
 
         impl $name {
@@ -207,8 +210,11 @@ pub(crate) use color_fields;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "snapshot", derive(serde::Serialize))]
 pub struct PaletteMeta {
+    /// Human-readable theme name.
     pub name: Arc<str>,
+    /// Machine identifier used for lookups.
     pub preset_id: Arc<str>,
+    /// Visual style tag: `"dark"`, `"light"`, etc.
     pub style: Arc<str>,
 }
 
@@ -222,15 +228,25 @@ pub struct PaletteMeta {
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "snapshot", derive(serde::Serialize))]
 pub struct Palette {
+    /// Theme identity, if parsed from a manifest with `[meta]`.
     pub meta: Option<PaletteMeta>,
+    /// Core background and foreground colors.
     pub base: BaseColors,
+    /// Status colors (success, warning, error, info, hint).
     pub semantic: SemanticColors,
+    /// Version-control diff highlighting.
     pub diff: DiffColors,
+    /// UI surface colors (menus, sidebars, overlays).
     pub surface: SurfaceColors,
+    /// Text chrome (comments, line numbers, links).
     pub typography: TypographyColors,
+    /// Syntax-highlighting token colors.
     pub syntax: SyntaxColors,
+    /// Editor chrome (cursor, selections, diagnostics).
     pub editor: EditorColors,
+    /// Standard 16-color ANSI terminal palette.
     pub terminal_ansi: TerminalAnsiColors,
+    /// Per-platform color overrides.
     #[cfg(feature = "platform")]
     pub platform: crate::platform::PlatformOverrides,
 }

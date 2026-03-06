@@ -4,9 +4,13 @@ use crate::palette::Palette;
 /// WCAG 2.1 conformance level for contrast checking.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ContrastLevel {
+    /// AA for normal text (≥ 4.5:1).
     AaNormal,
+    /// AA for large text (≥ 3.0:1).
     AaLarge,
+    /// AAA for normal text (≥ 7.0:1).
     AaaNormal,
+    /// AAA for large text (≥ 4.5:1).
     AaaLarge,
 }
 
@@ -29,11 +33,17 @@ impl ContrastLevel {
 /// A foreground/background pair that fails a contrast check.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ContrastViolation {
+    /// Dot-path label of the foreground slot (e.g. `"base.foreground"`).
     pub foreground_label: Box<str>,
+    /// Dot-path label of the background slot (e.g. `"base.background"`).
     pub background_label: Box<str>,
+    /// The foreground color that was tested.
     pub foreground: Color,
+    /// The background color that was tested.
     pub background: Color,
+    /// Measured contrast ratio.
     pub ratio: f64,
+    /// The conformance level that was not met.
     pub level: ContrastLevel,
 }
 

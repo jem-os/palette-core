@@ -14,13 +14,20 @@ pub type PlatformSections = BTreeMap<Arc<str>, ManifestSection>;
 /// The `[meta]` section of a theme TOML file.
 #[derive(Debug, Clone, Deserialize)]
 pub struct ManifestMeta {
+    /// Human-readable theme name.
     pub name: Arc<str>,
+    /// Machine identifier used for lookups.
     pub preset_id: Arc<str>,
+    /// Schema version string (e.g. `"1"`).
     pub schema_version: Arc<str>,
+    /// Visual style tag: `"dark"`, `"light"`, etc.
     pub style: Arc<str>,
+    /// Theme kind (e.g. `"base"`, `"variant"`).
     pub kind: Arc<str>,
+    /// Parent preset ID for inheritance.
     #[serde(default)]
     pub inherits: Option<Arc<str>>,
+    /// Upstream repository URL, if ported from another project.
     #[serde(default)]
     pub upstream_repo: Option<Arc<str>>,
 }
@@ -32,15 +39,25 @@ pub struct ManifestMeta {
 /// inheritance with [`merge_manifests`](crate::merge::merge_manifests).
 #[derive(Debug, Clone)]
 pub struct PaletteManifest {
+    /// Theme identity and inheritance metadata.
     pub meta: Option<ManifestMeta>,
+    /// Core background/foreground hex values.
     pub base: ManifestSection,
+    /// Status color hex values (success, error, etc.).
     pub semantic: ManifestSection,
+    /// Diff highlighting hex values.
     pub diff: ManifestSection,
+    /// UI surface hex values (menus, sidebars, etc.).
     pub surface: ManifestSection,
+    /// Text chrome hex values (comments, line numbers, etc.).
     pub typography: ManifestSection,
+    /// Syntax token hex values.
     pub syntax: ManifestSection,
+    /// Editor chrome hex values (cursor, selections, etc.).
     pub editor: ManifestSection,
+    /// ANSI terminal color hex values.
     pub terminal: ManifestSection,
+    /// Per-platform color overrides.
     #[cfg(feature = "platform")]
     pub platform: PlatformSections,
 }

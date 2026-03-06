@@ -9,8 +9,11 @@ use crate::palette::Palette;
 /// Display metadata for a theme, usable without parsing the full TOML.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ThemeInfo {
+    /// Machine identifier used for lookups.
     pub id: Arc<str>,
+    /// Human-readable theme name.
     pub name: Arc<str>,
+    /// Visual style tag: `"dark"`, `"light"`, etc.
     pub style: Arc<str>,
 }
 
