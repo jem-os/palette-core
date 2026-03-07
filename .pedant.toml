@@ -1,0 +1,15 @@
+# pedant configuration for palette-core
+
+# Arc<str> clones in merge loops are O(1) refcount bumps, not heap allocations.
+# pedant can't see through the ManifestSection type alias to know the values are Arc<str>.
+[overrides."src/merge.rs"]
+check_clone_in_loop = false
+
+# registry.rs: BuiltinInfo is a private helper consumed by the presets! macro — not a
+# disconnected concern, just an implementation detail of Registry.
+# wasm.rs: JsColor, JsPalette, JsRegistry, JsThemeInfo are a single FFI binding surface.
+[overrides."src/registry.rs"]
+check_mixed_concerns = false
+
+[overrides."src/wasm.rs"]
+check_mixed_concerns = false
