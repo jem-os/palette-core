@@ -803,7 +803,7 @@ dependencies = [
 
 [[package]]
 name = "palette-core"
-version = "0.6.10"
+version = "0.7.0"
 dependencies = [
  "egui",
  "js-sys",

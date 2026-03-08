@@ -1,6 +1,6 @@
 [package]
 name = "palette-core"
-version = "0.6.10"
+version = "0.7.0"
 edition = "2024"
 rust-version = "1.85"
 description = "TOML-defined theme system with inheritance, CSS export, and multi-target rendering"
