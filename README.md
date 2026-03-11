@@ -1,6 +1,8 @@
 [![Crates.io](https://img.shields.io/crates/v/palette-core)](https://crates.io/crates/palette-core)
 [![docs.rs](https://img.shields.io/docsrs/palette-core)](https://docs.rs/palette-core)
 [![CI](https://github.com/jostled-org/palette-core/actions/workflows/ci.yml/badge.svg)](https://github.com/jostled-org/palette-core/actions/workflows/ci.yml)
+[![Downloads](https://img.shields.io/crates/d/palette-core)](https://crates.io/crates/palette-core)
+[![deps.rs](https://deps.rs/repo/github/jostled-org/palette-core/status.svg)](https://deps.rs/repo/github/jostled-org/palette-core)
 [![License: MIT/Apache-2.0](https://img.shields.io/crates/l/palette-core)](LICENSE-MIT)
 
 Need a color palette? Do you have to hand-roll it?
