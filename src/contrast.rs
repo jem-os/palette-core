@@ -1,5 +1,6 @@
 use crate::color::Color;
 use crate::palette::Palette;
+use crate::resolved::ResolvedPalette;
 
 /// WCAG 2.1 conformance level for contrast checking.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -276,4 +277,117 @@ pub fn validate_palette(palette: &Palette, level: ContrastLevel) -> Vec<Contrast
     }
 
     violations
+}
+
+/// Nudge a foreground color's lightness until it meets the given contrast level
+/// against `bg`. Returns `fg` unchanged if the pair already passes or if no
+/// lightness adjustment can reach the target.
+///
+/// Only HSL lightness is modified; hue and saturation are preserved.
+pub fn nudge_foreground(fg: Color, bg: Color, level: ContrastLevel) -> Color {
+    let threshold = level.threshold();
+    if contrast_ratio(&fg, &bg) >= threshold {
+        return fg;
+    }
+
+    let fg_lum = fg.relative_luminance();
+    let bg_lum = bg.relative_luminance();
+
+    // Try the natural direction first: lighter fg if fg is lighter, darker otherwise.
+    let primary_lighten = fg_lum >= bg_lum;
+    match nudge_direction(fg, &bg, threshold, primary_lighten) {
+        Some(result) => result,
+        None => nudge_direction(fg, &bg, threshold, !primary_lighten).unwrap_or(fg),
+    }
+}
+
+fn nudge_direction(fg: Color, bg: &Color, threshold: f64, lighten: bool) -> Option<Color> {
+    // Check if the extreme can reach the target at all.
+    let extreme = match lighten {
+        true => fg.lighten(1.0),
+        false => fg.darken(1.0),
+    };
+    match contrast_ratio(&extreme, bg) >= threshold {
+        true => {}
+        false => return None,
+    }
+
+    let mut lo: f64 = 0.0;
+    let mut hi: f64 = 1.0;
+    let mut best = extreme;
+
+    for _ in 0..20 {
+        let mid = (lo + hi) / 2.0;
+        let candidate = match lighten {
+            true => fg.lighten(mid),
+            false => fg.darken(mid),
+        };
+        match contrast_ratio(&candidate, bg) >= threshold {
+            true => {
+                best = candidate;
+                hi = mid;
+            }
+            false => lo = mid,
+        }
+    }
+    Some(best)
+}
+
+/// Adjust all semantically paired foreground slots on a resolved palette so
+/// they meet the given contrast level. Mirrors the pairs checked by
+/// [`validate_palette`].
+pub fn adjust_contrast(resolved: &mut ResolvedPalette, level: ContrastLevel) {
+    // Helper: nudge fg against bg in place.
+    macro_rules! nudge {
+        ($fg:expr, $bg:expr) => {
+            $fg = nudge_foreground($fg, $bg, level);
+        };
+    }
+
+    // Core readability
+    nudge!(resolved.base.foreground, resolved.base.background);
+    nudge!(resolved.base.foreground_dark, resolved.base.background);
+    nudge!(resolved.base.foreground, resolved.base.background_dark);
+    nudge!(resolved.base.foreground, resolved.base.background_highlight);
+
+    // Focus surface
+    nudge!(resolved.base.foreground, resolved.surface.focus);
+
+    // Semantic over background
+    nudge!(resolved.semantic.success, resolved.base.background);
+    nudge!(resolved.semantic.warning, resolved.base.background);
+    nudge!(resolved.semantic.error, resolved.base.background);
+    nudge!(resolved.semantic.info, resolved.base.background);
+    nudge!(resolved.semantic.hint, resolved.base.background);
+
+    // Editor pairs
+    nudge!(resolved.editor.selection_fg, resolved.editor.selection_bg);
+    nudge!(resolved.editor.inlay_hint_fg, resolved.editor.inlay_hint_bg);
+    nudge!(resolved.editor.search_fg, resolved.editor.search_bg);
+    nudge!(resolved.editor.cursor_text, resolved.editor.cursor);
+
+    // Diff pairs
+    nudge!(resolved.diff.added_fg, resolved.diff.added_bg);
+    nudge!(resolved.diff.modified_fg, resolved.diff.modified_bg);
+    nudge!(resolved.diff.removed_fg, resolved.diff.removed_bg);
+
+    // Typography over background
+    nudge!(resolved.typography.comment, resolved.base.background);
+    nudge!(resolved.typography.line_number, resolved.base.background);
+
+    // Syntax over background
+    let bg = resolved.base.background;
+    for_each_syntax_slot(&mut resolved.syntax, |slot| {
+        *slot = nudge_foreground(*slot, bg, level);
+    });
+}
+
+/// Apply a closure to every mutable syntax color slot.
+fn for_each_syntax_slot(
+    syntax: &mut crate::resolved::ResolvedSyntaxColors,
+    mut f: impl FnMut(&mut Color),
+) {
+    for (_, slot) in syntax.all_slots_mut() {
+        f(slot);
+    }
 }

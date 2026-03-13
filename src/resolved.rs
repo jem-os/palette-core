@@ -8,6 +8,7 @@
 use std::sync::LazyLock;
 
 use crate::color::Color;
+use crate::contrast::{ContrastLevel, adjust_contrast};
 use crate::palette::Palette;
 use crate::style::ResolvedSyntaxStyles;
 
@@ -42,6 +43,14 @@ macro_rules! resolved_group {
                 pub fn all_slots(&self) -> impl Iterator<Item = (&'static str, &Color)> {
                     [$(
                         (stringify!($field), &self.$field),
+                    )+]
+                    .into_iter()
+                }
+
+                /// Iterate over all slots as `(name, &mut Color)` pairs.
+                pub fn all_slots_mut(&mut self) -> impl Iterator<Item = (&'static str, &mut Color)> {
+                    [$(
+                        (stringify!($field), &mut self.$field),
                     )+]
                     .into_iter()
                 }
@@ -102,6 +111,15 @@ impl Palette {
     /// Resolve all `Option<Color>` slots using [`Palette::default`] as fallback.
     pub fn resolve(&self) -> ResolvedPalette {
         self.resolve_with(&DEFAULT_PALETTE)
+    }
+
+    /// Resolve all slots and nudge foreground colors to meet the given
+    /// [`ContrastLevel`]. The TOML-defined colors remain authoritative;
+    /// only failing foreground slots are lightened or darkened.
+    pub fn resolve_with_contrast(&self, level: ContrastLevel) -> ResolvedPalette {
+        let mut resolved = self.resolve();
+        adjust_contrast(&mut resolved, level);
+        resolved
     }
 
     /// Resolve all `Option<Color>` slots using a custom fallback palette.

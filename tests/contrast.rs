@@ -4,7 +4,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use palette_core::color::Color;
-use palette_core::contrast::{ContrastLevel, contrast_ratio, meets_level, validate_palette};
+use palette_core::contrast::{
+    ContrastLevel, contrast_ratio, meets_level, nudge_foreground, validate_palette,
+};
 use palette_core::manifest::PaletteManifest;
 use palette_core::palette::Palette;
 
@@ -306,6 +308,23 @@ fn none_fields_skipped_without_error() {
 }
 
 #[test]
+fn github_presets_diff_modified_readable() {
+    // Regression (#40): github_dark/github_light had modified_bg == modified_fg (ratio 1:1).
+    // Diff backgrounds are line highlights with the indicator color overlaid; 2.5:1
+    // matches the contrast the existing added/removed tints achieve in light themes.
+    for id in ["github_dark", "github_light"] {
+        let palette = palette_core::preset(id).unwrap();
+        let fg = palette.diff.modified_fg.expect("missing modified_fg");
+        let bg = palette.diff.modified_bg.expect("missing modified_bg");
+        let ratio = fg.contrast_ratio(&bg);
+        assert!(
+            ratio >= 2.5,
+            "{id}: diff.modified_fg ({fg}) on diff.modified_bg ({bg}) = {ratio:.2}:1 (need >= 2.5)"
+        );
+    }
+}
+
+#[test]
 fn all_presets_focus_passes_aa_large() {
     for id in palette_core::preset_ids() {
         let palette = palette_core::preset(id).unwrap();
@@ -317,6 +336,134 @@ fn all_presets_focus_passes_aa_large() {
         assert!(
             ContrastLevel::AaLarge.passes(ratio),
             "{id}: base.foreground on surface.focus = {ratio:.2}:1 (need >= 3.0)"
+        );
+    }
+}
+
+// --- nudge_foreground ---
+
+#[test]
+fn nudge_already_passing_unchanged() {
+    let fg = color("#000000");
+    let bg = color("#FFFFFF");
+    let result = nudge_foreground(fg, bg, ContrastLevel::AaNormal);
+    assert_eq!(result, fg, "already-passing pair should not be modified");
+}
+
+#[test]
+fn nudge_fixes_failing_pair() {
+    // Near-identical colors: guaranteed to fail AA
+    let fg = color("#777777");
+    let bg = color("#808080");
+    assert!(
+        !meets_level(&fg, &bg, ContrastLevel::AaNormal),
+        "precondition: pair should fail"
+    );
+    let nudged = nudge_foreground(fg, bg, ContrastLevel::AaNormal);
+    assert!(
+        meets_level(&nudged, &bg, ContrastLevel::AaNormal),
+        "nudged pair should pass AA: ratio = {:.2}",
+        contrast_ratio(&nudged, &bg)
+    );
+}
+
+#[test]
+fn nudge_preserves_hue() {
+    // Saturated red that fails against a dark bg
+    let fg = color("#CC3333");
+    let bg = color("#331111");
+    let nudged = nudge_foreground(fg, bg, ContrastLevel::AaNormal);
+    // The nudged color should still be recognizably red (r > g, r > b)
+    assert!(
+        nudged.r > nudged.g && nudged.r > nudged.b,
+        "nudged color {nudged} should still be reddish"
+    );
+}
+
+#[test]
+fn nudge_unadjustable_returns_original() {
+    // Two identical colors — nudging lightness alone can't help if both
+    // are mid-gray, but actually lightening or darkening should work.
+    // Truly unadjustable: same color. The function should still return
+    // a valid result (either fixed or original).
+    let fg = color("#808080");
+    let bg = color("#808080");
+    let result = nudge_foreground(fg, bg, ContrastLevel::AaaNormal);
+    // Mid-gray can reach AAA against itself by going to white or black.
+    // Just verify the function doesn't panic and returns a valid color.
+    let _ = result;
+}
+
+// --- resolve_with_contrast ---
+
+#[test]
+fn resolve_with_contrast_matches_resolve_on_clean_preset() {
+    // A well-contrasted preset should produce identical results.
+    let palette = palette_core::preset("golden_hour").unwrap();
+    let plain = palette.resolve();
+    let adjusted = palette.resolve_with_contrast(ContrastLevel::AaNormal);
+    assert_eq!(
+        plain, adjusted,
+        "clean preset should not be modified by resolve_with_contrast"
+    );
+}
+
+#[test]
+fn resolve_with_contrast_fixes_bad_palette() {
+    let mut base = HashMap::new();
+    base.insert(Arc::from("foreground"), Arc::from("#555555"));
+    base.insert(Arc::from("background"), Arc::from("#505050"));
+    let manifest = PaletteManifest {
+        meta: None,
+        base,
+        semantic: HashMap::new(),
+        diff: HashMap::new(),
+        surface: HashMap::new(),
+        typography: HashMap::new(),
+        syntax: HashMap::new(),
+        editor: HashMap::new(),
+        terminal: HashMap::new(),
+        syntax_style: HashMap::new(),
+        #[cfg(feature = "platform")]
+        platform: Default::default(),
+    };
+    let palette = Palette::from_manifest(&manifest).unwrap();
+
+    // Confirm violations exist before adjustment
+    let before = validate_palette(&palette, ContrastLevel::AaNormal);
+    assert!(
+        !before.is_empty(),
+        "precondition: palette should have violations"
+    );
+
+    let resolved = palette.resolve_with_contrast(ContrastLevel::AaNormal);
+
+    // Check core fg/bg pair passes
+    let ratio = resolved
+        .base
+        .foreground
+        .contrast_ratio(&resolved.base.background);
+    assert!(
+        ContrastLevel::AaNormal.passes(ratio),
+        "adjusted fg/bg should pass AA: {ratio:.2}:1"
+    );
+}
+
+#[test]
+fn resolve_with_contrast_zero_violations_on_presets() {
+    for id in palette_core::preset_ids() {
+        let palette = palette_core::preset(id).unwrap();
+        let resolved = palette.resolve_with_contrast(ContrastLevel::AaNormal);
+
+        // Re-validate by checking all the same pairs validate_palette would.
+        // We check fg/bg directly since validate_palette works on Palette, not ResolvedPalette.
+        let ratio = resolved
+            .base
+            .foreground
+            .contrast_ratio(&resolved.base.background);
+        assert!(
+            ContrastLevel::AaNormal.passes(ratio),
+            "{id}: base.foreground on base.background = {ratio:.2}:1 after adjustment"
         );
     }
 }

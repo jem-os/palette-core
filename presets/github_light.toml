@@ -29,6 +29,7 @@ added = "#2EA043"
 modified = "#BF8700"
 removed = "#CF222E"
 added_bg = "#d4f0d8"
+modified_bg = "#f0e8d4"
 removed_bg = "#f0d4d8"
 
 added_fg = "#2EA043"
