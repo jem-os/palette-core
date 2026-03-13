@@ -80,7 +80,7 @@ The [guide](docs/guide.md) covers rendering targets, theme switching, custom pre
 
 ## Demos
 
-See [p3-demo](https://github.com/jostled-org/p3-demo) for a TUI theme picker and a side-by-side CSS preview, with a WASM demo in progress.
+See [p3-demo](https://github.com/jostled-org/p3-demo) for a TUI theme picker and a side-by-side [CSS](https://jostled-org.github.io/p3-demo/) preview, with a WASM demo in progress.
 
 ## License
 
