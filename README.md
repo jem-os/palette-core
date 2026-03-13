@@ -59,7 +59,7 @@ inherits = "tokyonight"
 background = "#24283b"
 ```
 
-### Contrast validation
+### Contrast validation and auto-fix
 
 ```rust
 use palette_core::{preset, ContrastLevel};
@@ -67,6 +67,9 @@ use palette_core::contrast::validate_palette;
 
 let palette = preset("tokyonight").expect("builtin preset");
 let violations = validate_palette(&palette, ContrastLevel::AaNormal);
+
+// Auto-fix: nudge failing foregrounds to meet WCAG at resolve time
+let resolved = palette.resolve_with_contrast(ContrastLevel::AaNormal);
 ```
 
 ## Documentation

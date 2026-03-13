@@ -413,6 +413,29 @@ for v in &violations {
 
 Available levels: `AaNormal`, `AaLarge`, `AaaNormal`, `AaaLarge`.
 
+### Auto-fix with `resolve_with_contrast`
+
+`resolve_with_contrast` resolves a palette and nudges failing foreground colors until they meet the requested contrast level. Only HSL lightness is adjusted — hue and saturation are preserved. Background colors are never modified.
+
+```rust
+use palette_core::{preset, ContrastLevel};
+
+let palette = preset("catppuccin").expect("builtin preset");
+let resolved = palette.resolve_with_contrast(ContrastLevel::AaNormal);
+// All foreground/background pairs now meet AA normal (≥ 4.5:1)
+```
+
+For individual color pairs, use `nudge_foreground` directly:
+
+```rust
+use palette_core::Color;
+use palette_core::contrast::{nudge_foreground, ContrastLevel};
+
+let fg = Color::from_hex("#777777").unwrap();
+let bg = Color::from_hex("#808080").unwrap();
+let fixed = nudge_foreground(fg, bg, ContrastLevel::AaNormal);
+```
+
 ## Color manipulation
 
 ```rust
